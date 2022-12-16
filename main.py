@@ -2,17 +2,23 @@
 import sys
 import os, time
 import numpy as np
-from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QDialog
+from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QDialog, QSplashScreen
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt6 import uic
 
-from win32api import GetCursorPos, keybd_event, GetKeyState
+from win32api import GetCursorPos, keybd_event, GetKeyState, EnumDisplayMonitors
 import win32con
 from PaintLabel import *
 
 class mainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        monitor = EnumDisplayMonitors()
+        monitorMap = list()
+        self.monitors = []
+        for info in monitor:
+            self.monitors.append([info[2][0], info[2][1], info[2][2], info[2][3]])
 
         layout = QVBoxLayout()
 
@@ -24,6 +30,7 @@ class mainWindow(QMainWindow):
 
         self.mouseMove = moveMus()
         self.mouseMove.Set_MovePoint.connect(self.Set_MovePoint)
+        self.mouseMove.Set_reSize.connect(self.Set_reSize)
 
         self.mouseMove.start()
 
@@ -34,34 +41,46 @@ class mainWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_Disabled, True)
         self.resize(40, 40)
 
+        self.M = False
+
     @pyqtSlot(int, int, int)
     def Set_MovePoint(self, x, y, d):
         self.move(x, y)
 
-    @pyqtSlot(int, int)
-    def Set_reSize(self, x, y):
-        self.resize(x,y)
+    @pyqtSlot()
+    def Set_reSize(self):
+        if not self.M:
+            for i in self.monitors:
+                x = i[2] - i[0]
+                y = i[3] - i[1]
+                print("asd",i[0], i[1], x,y)
+                self.shield = Shield(i[0], i[1], x, y)
+                self.shield.show()
+            self.M = True
 
 class Shield(QDialog):
-    def __init__(self, x, y):
+    def __init__(self, x, y, w, h):
         super(Shield, self).__init__()
-        self.Win_x = x
-        self.Win_y = y
-        self.resize(self.Win_x, self.Win_y)
+        self.move(x,y)
+        self.resize(w, h)
 
-        layout = QVBoxLayout()
+        # self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
+        # self.setAttribute(Qt.WidgetAttribute.WA_Disabled, False)
 
-        self.view = PaintLabel(self)
-        self.view.resize(self.Win_x, self.Win_y)
-        layout.addWidget(self.view)
-
-        self.setLayout(layout)
+        # layout = QVBoxLayout()
+        #
+        # self.view = PaintLabel(self)
+        # self.view.resize(self.Win_x, self.Win_y)
+        # layout.addWidget(self.view)
+        #
+        # self.setLayout(layout)
 
 
 
 class moveMus(QThread):
     Set_MovePoint = pyqtSignal(int, int, int)
-    Set_reSize = pyqtSignal(int, int)
+    Set_reSize = pyqtSignal()
     def __init__(self, parent=None):
         super(moveMus, self).__init__(parent)
         self.processing = True
@@ -69,7 +88,7 @@ class moveMus(QThread):
         self.Delay = 0.01
         self.Delay_time = time.time() - self.Delay
 
-        self.ScreenSaveTime = 240
+        self.ScreenSaveTime = 5
         self.ScreenSaveTime_time = time.time()
         self.ScreenShield = False
 
@@ -93,7 +112,7 @@ class moveMus(QThread):
                     self.ScreenSaveTime_time = temp_time
 
                 if self.ScreenShield:
-                    pass#self.WinReSize()
+                    self.WinReSize()
                 else:
                     self.WinMove(x, y)
                 print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
@@ -113,8 +132,8 @@ class moveMus(QThread):
         self.x_old = x
         self.y_old = y
 
-    def WinReSize(self, x, y):
-        self.Set_reSize(x, y)
+    def WinReSize(self):
+        self.Set_reSize.emit()
 
     def PressKey(self):
         keybd_event(17, 0, 0, 0)
@@ -131,8 +150,8 @@ if __name__ == '__main__':
     sys._excepthook = sys.excepthook
     sys.excepthook = my_exception_hook
 
-
     app = QApplication(sys.argv)
+
     MainWindow = mainWindow()
     MainWindow.show()
 
