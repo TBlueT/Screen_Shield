@@ -9,18 +9,23 @@ from UiUpdateprocess import *
 import random
 
 class PaintLabel(QLabel):
-    def __init__(self, parent):
+    def __init__(self, parent:object = None, box_size:int=20, x_offset:int=0, y_offset:int=0):
         super().__init__(parent)
         self.scene = QGraphicsScene()
         self.MainW = parent
         self.uiUpdate = UiUpdate(self)
 
+
+        self.BoxSize = box_size
+        self.offset = 20
+        self.x_offset = x_offset
+        self.y_offset = y_offset
         self.box = Obj(self)
-        self.box.MakeBox(20,20,20)
+        self.box.MakeBox(self.BoxSize,self.BoxSize,self.BoxSize)
         h = hMat()
 
-        self.offset = 10
-        self.box.H = h.Trans(uVector(-self.offset, -self.offset, -self.offset))*h.Trans(uVector(-20, -20, -20))# * h.RotZ(-45) * h.RotX(-125)
+
+        self.box.H = h.Trans(uVector(-self.offset - self.x_offset, -self.offset - self.y_offset, -self.offset))*h.Trans(uVector(-self.BoxSize/2, -self.BoxSize/2, -self.BoxSize/2))# * h.RotZ(-45) * h.RotX(-125)
 
         self.ran = 0
         self.ran2 = 0
@@ -44,12 +49,12 @@ class PaintLabel(QLabel):
             random.seed()
             self.ran3 = random.randrange(-20, 20)
             self.Delay_time = time.time()
-        self.a = 1 * (self.ran * 0.1)
-        self.b = 1 * (self.ran2 * 0.1)
-        self.c = 1 * (self.ran3 * 0.1)
-        self.box.H = self.box.H * h.Trans(uVector(self.offset, self.offset, self.offset))
-        self.box.H = self.box.H * h.RotX(self.a) * h.RotY(self.b) * h.RotZ(self.c)
-        self.box.H = self.box.H * h.Trans(uVector(-self.offset, -self.offset, -self.offset))
+        a = 1 * (self.ran * 0.1)
+        b = 1 * (self.ran2 * 0.1)
+        c = 1 * (self.ran3 * 0.1)
+        self.box.H = self.box.H * h.Trans(uVector(self.BoxSize/2, self.BoxSize/2, self.BoxSize/2))
+        self.box.H = self.box.H * h.RotX(a) * h.RotY(b) * h.RotZ(c)
+        self.box.H = self.box.H * h.Trans(uVector(-self.BoxSize/2, -self.BoxSize/2, -self.BoxSize/2))
 
         self.box.Update()
         self.box.Draw(qp)

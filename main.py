@@ -30,7 +30,8 @@ class mainWindow(QMainWindow):
 
         self.mouseMove = moveMus()
         self.mouseMove.Set_MovePoint.connect(self.Set_MovePoint)
-        self.mouseMove.Set_reSize.connect(self.Set_reSize)
+        self.mouseMove.Set_WinShield.connect(self.Set_WinShield)
+        self.mouseMove.Set_WinShield_Close.connect(self.Set_WinShield_Close)
 
         self.mouseMove.start()
 
@@ -40,47 +41,61 @@ class mainWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_Disabled, True)
         self.resize(40, 40)
-
         self.M = False
+
+        self.WinShieldName = []
 
     @pyqtSlot(int, int, int)
     def Set_MovePoint(self, x, y, d):
         self.move(x, y)
 
     @pyqtSlot()
-    def Set_reSize(self):
+    def Set_WinShield(self):
         if not self.M:
             for i in self.monitors:
                 x = i[2] - i[0]
                 y = i[3] - i[1]
                 print("asd",i[0], i[1], x,y)
-                self.shield = Shield(i[0], i[1], x, y)
-                self.shield.show()
+                setattr(self, F"Shield_{i}",Shield(i[0], i[1], x, y))
+                self.WinShieldName.append(F"Shield_{i}")
+                print(self.WinShieldName)
             self.M = True
+
+    @pyqtSlot()
+    def Set_WinShield_Close(self):
+        for i in self.WinShieldName:
+            getattr(self, i).close()
+        self.WinShieldName = []
+        self.M = False
+
 
 class Shield(QDialog):
     def __init__(self, x, y, w, h):
         super(Shield, self).__init__()
+        print(x,y,w,h)
         self.move(x,y)
         self.resize(w, h)
+        self.setStyleSheet("background:rgb(0,0,0)")
+        self.showFullScreen()
+
 
         # self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
         # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
         # self.setAttribute(Qt.WidgetAttribute.WA_Disabled, False)
 
-        # layout = QVBoxLayout()
-        #
-        # self.view = PaintLabel(self)
-        # self.view.resize(self.Win_x, self.Win_y)
-        # layout.addWidget(self.view)
-        #
-        # self.setLayout(layout)
+        layout = QVBoxLayout()
+
+        self.view = PaintLabel(self, 500, w/2, h/2)
+        layout.addWidget(self.view)
+
+        self.setLayout(layout)
 
 
 
 class moveMus(QThread):
     Set_MovePoint = pyqtSignal(int, int, int)
-    Set_reSize = pyqtSignal()
+    Set_WinShield = pyqtSignal()
+    Set_WinShield_Close = pyqtSignal()
     def __init__(self, parent=None):
         super(moveMus, self).__init__(parent)
         self.processing = True
@@ -88,7 +103,7 @@ class moveMus(QThread):
         self.Delay = 0.01
         self.Delay_time = time.time() - self.Delay
 
-        self.ScreenSaveTime = 5
+        self.ScreenSaveTime = 240
         self.ScreenSaveTime_time = time.time()
         self.ScreenShield = False
 
@@ -108,14 +123,18 @@ class moveMus(QThread):
             temp_time = time.time()
             if temp_time - self.Delay_time > self.Delay:
                 if x != self.x_old or y != self.y_old:
-                    self.ScreenShield = False
+                    if self.ScreenShield:
+                        self.Set_WinShield_Close.emit()
+                        self.ScreenShield = False
+                        print("Win close")
                     self.ScreenSaveTime_time = temp_time
 
                 if self.ScreenShield:
-                    self.WinReSize()
+                    self.Set_WinShield.emit()
+                    print("Win show")
                 else:
                     self.WinMove(x, y)
-                print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
+                #print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
                 self.Delay_time = temp_time
 
             if temp_time - self.ScreenSaveTime_time > self.ScreenSaveTime:
@@ -123,7 +142,7 @@ class moveMus(QThread):
                 self.PressKey()
                 self.ScreenSaveTime_time = temp_time
 
-            time.sleep(0.005)
+            time.sleep(0.009)
 
     def WinMove(self, x, y):
         r = np.arctan2(x, y)
@@ -132,8 +151,6 @@ class moveMus(QThread):
         self.x_old = x
         self.y_old = y
 
-    def WinReSize(self):
-        self.Set_reSize.emit()
 
     def PressKey(self):
         keybd_event(17, 0, 0, 0)
