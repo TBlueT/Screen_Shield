@@ -8,6 +8,7 @@ from PyQt6 import uic
 
 from win32api import GetCursorPos, keybd_event, GetKeyState, EnumDisplayMonitors
 import win32con
+import keyboard
 from PaintLabel import *
 
 class mainWindow(QMainWindow):
@@ -91,7 +92,6 @@ class Shield(QDialog):
         self.setLayout(layout)
 
 
-
 class moveMus(QThread):
     Set_MovePoint = pyqtSignal(int, int, int)
     Set_WinShield = pyqtSignal()
@@ -100,13 +100,15 @@ class moveMus(QThread):
         super(moveMus, self).__init__(parent)
         self.processing = True
 
+        self.key = GetKeyboard()
+        self.key.Get_Key.connect(self.Getkey)
         self.Delay = 0.01
         self.Delay_time = time.time() - self.Delay
 
         self.ScreenSaveTime = 240
         self.ScreenSaveTime_time = time.time()
         self.ScreenShield = False
-
+        self.key.start()
         x, y = GetCursorPos()
         self.x_old = x
         self.y_old = y
@@ -124,8 +126,7 @@ class moveMus(QThread):
             if temp_time - self.Delay_time > self.Delay:
                 if x != self.x_old or y != self.y_old:
                     if self.ScreenShield:
-                        self.Set_WinShield_Close.emit()
-                        self.ScreenShield = False
+                        self.Release()
                         print("Win close")
                     self.ScreenSaveTime_time = temp_time
 
@@ -134,7 +135,7 @@ class moveMus(QThread):
                     print("Win show")
                 else:
                     self.WinMove(x, y)
-                #print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
+                print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
                 self.Delay_time = temp_time
 
             if temp_time - self.ScreenSaveTime_time > self.ScreenSaveTime:
@@ -144,6 +145,10 @@ class moveMus(QThread):
 
             time.sleep(0.009)
 
+    def Release(self):
+        self.Set_WinShield_Close.emit()
+        self.ScreenShield = False
+
     def WinMove(self, x, y):
         r = np.arctan2(x, y)
         self.d = round((self.d + (r * 180 / np.pi)) / 2, 2)
@@ -151,12 +156,27 @@ class moveMus(QThread):
         self.x_old = x
         self.y_old = y
 
+    @pyqtSlot(str)
+    def Getkey(self, name):
+        #if self.ScreenShield:
+        print(name)
+        #self.Release()
+        self.ScreenSaveTime_time = time.time()
+
 
     def PressKey(self):
         keybd_event(17, 0, 0, 0)
         keybd_event(17, 0, win32con.KEYEVENTF_KEYUP, 0)
         print("버튼 눌림")
 
+class GetKeyboard(QThread):
+    Get_Key = pyqtSignal(str)
+    def __init__(self):
+        super(GetKeyboard, self).__init__()
+
+    def run(self):
+        while True:
+            self.Get_Key.emit(keyboard.read_key())
 
 def my_exception_hook(exctype, value, traceback):
     print(exctype, value, traceback)
