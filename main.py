@@ -91,7 +91,6 @@ class Shield(QDialog):
 
         self.setLayout(layout)
 
-
 class moveMus(QThread):
     Set_MovePoint = pyqtSignal(int, int, int)
     Set_WinShield = pyqtSignal()
@@ -105,9 +104,12 @@ class moveMus(QThread):
         self.Delay = 0.01
         self.Delay_time = time.time() - self.Delay
 
-        self.ScreenSaveTime = 240
+        self.ScreenSaveTime = 60
         self.ScreenSaveTime_time = time.time()
         self.ScreenShield = False
+
+        self.KeyTrigger: bool = False
+
         self.key.start()
         x, y = GetCursorPos()
         self.x_old = x
@@ -125,29 +127,33 @@ class moveMus(QThread):
             temp_time = time.time()
             if temp_time - self.Delay_time > self.Delay:
                 if x != self.x_old or y != self.y_old:
-                    if self.ScreenShield:
-                        self.Release()
-                        print("Win close")
+                    self.WinMove(x, y)
+
+                    self.ScreenSaveRelease()
                     self.ScreenSaveTime_time = temp_time
 
                 if self.ScreenShield:
                     self.Set_WinShield.emit()
                     print("Win show")
-                else:
-                    self.WinMove(x, y)
+
                 print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
                 self.Delay_time = temp_time
 
-            if temp_time - self.ScreenSaveTime_time > self.ScreenSaveTime:
+            if time.time() - self.ScreenSaveTime_time > self.ScreenSaveTime:
                 self.ScreenShield = True
                 self.PressKey()
                 self.ScreenSaveTime_time = temp_time
 
             time.sleep(0.009)
 
-    def Release(self):
-        self.Set_WinShield_Close.emit()
-        self.ScreenShield = False
+    def ScreenSaveTime_Trigger(self):
+        return time.time() - self.ScreenSaveTime_time > self.ScreenSaveTime
+
+    def ScreenSaveRelease(self):
+        if self.ScreenShield:
+            self.Set_WinShield_Close.emit()
+            self.ScreenShield = False
+            print("Win close")
 
     def WinMove(self, x, y):
         r = np.arctan2(x, y)
@@ -158,16 +164,16 @@ class moveMus(QThread):
 
     @pyqtSlot(str)
     def Getkey(self, name):
-        #if self.ScreenShield:
-        print(name)
-        #self.Release()
-        self.ScreenSaveTime_time = time.time()
-
-
+        if 'f19' != name:
+            self.ScreenSaveRelease()
+            print(name)
+            self.ScreenSaveTime_time = time.time()
     def PressKey(self):
-        keybd_event(17, 0, 0, 0)
-        keybd_event(17, 0, win32con.KEYEVENTF_KEYUP, 0)
+        self.KeyTrigger = True
+        keybd_event(130, 0, 0, 0)
+        keybd_event(130, 0, win32con.KEYEVENTF_KEYUP, 0)
         print("버튼 눌림")
+        self.KeyTrigger = False
 
 class GetKeyboard(QThread):
     Get_Key = pyqtSignal(str)
@@ -177,6 +183,7 @@ class GetKeyboard(QThread):
     def run(self):
         while True:
             self.Get_Key.emit(keyboard.read_key())
+            time.sleep(0.0001)
 
 def my_exception_hook(exctype, value, traceback):
     print(exctype, value, traceback)
