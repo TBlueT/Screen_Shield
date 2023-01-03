@@ -77,6 +77,7 @@ class Shield(QDialog):
         self.move(x,y)
         self.resize(w, h)
         self.setStyleSheet("background:rgb(0,0,0)")
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
         self.showFullScreen()
 
 
