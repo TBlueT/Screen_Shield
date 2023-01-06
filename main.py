@@ -87,7 +87,7 @@ class Shield(QDialog):
 
         layout = QVBoxLayout()
 
-        self.view = PaintLabel(self, 500, w/2, h/2)
+        self.view = PaintLabel(self, h/4, w/2, h/2)
         layout.addWidget(self.view)
 
         self.setLayout(layout)
