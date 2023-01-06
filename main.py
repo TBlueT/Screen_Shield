@@ -66,6 +66,8 @@ class mainWindow(QMainWindow):
     def Set_WinShield_Close(self):
         for i in self.WinShieldName:
             getattr(self, i).close()
+            getattr(self, i).view.uiUpdate.run_stop = False
+            delattr(self, i)
         self.WinShieldName = []
         self.M = False
 
@@ -87,10 +89,16 @@ class Shield(QDialog):
 
         layout = QVBoxLayout()
 
-        self.view = PaintLabel(self, h/4, w/2, h/2)
+        self.view = PaintLabel(self, h/4, w/2, h/2, color=True)
         layout.addWidget(self.view)
 
         self.setLayout(layout)
+
+    def outO(self):
+        del self.view
+
+    def __del__(self):
+        print("창 종료")
 
 class moveMus(QThread):
     Set_MovePoint = pyqtSignal(int, int, int)

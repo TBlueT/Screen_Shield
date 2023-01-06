@@ -2,20 +2,27 @@ from PyQt6.QtGui import QPainterPath, QPen, QBrush, QColor
 from PyQt6.QtCore import Qt
 
 from ThDobj.uVector import *
+import random
 
 class uPolygon:
-    def __init__(self, f=-1, s=-1, t=-1):
+    def __init__(self, f=-1, s=-1, t=-1, color:bool=False):
         self.f = f
         self.s = s
         self.t = t
-        self.color = '#00aa00'
-
+        #self.color = '#00aa00'
+        self.color:bool = color
+        self.c = "#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)])
         self.bDraw = False
 
     def SetColor(self, color=None):
         if color != None:
             self.color = color
 
+    def inpu(self, f, s, t):
+        self.f = f
+        self.s = s
+        self.t = t
+        print(self.f, self.s, self.t)
 
     def Draw(self, qp, pVer, x=0,y=0):
         path = QPainterPath()
@@ -25,7 +32,8 @@ class uPolygon:
         path.lineTo(x - pVer[self.t].x, y - pVer[self.t].y)
         path.lineTo(x - pVer[self.f].x, y - pVer[self.f].y)
         qp.setPen(QPen(Qt.GlobalColor.blue, 3.5))
-        #qp.setBrush(QBrush(QColor(self.color)))
+        if self.color:
+            qp.setBrush(QBrush(QColor(self.c)))
         qp.drawPath(path)
 
     def Click(self, pTemp, pt):

@@ -4,7 +4,7 @@ from ThDobj.uCam import *
 import ctypes
 
 class Obj:
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, color:bool=False):
         self.daemon = True
         self.run_stop = True
         self.main = parent
@@ -12,6 +12,8 @@ class Obj:
         self.Hg = hMat()
         self.H = hMat()
         self.q = uVector()
+
+        self.color: bool = color
 
         #self.pCam = self.main.ucam
         self.pVer = None
@@ -33,7 +35,7 @@ class Obj:
 
         self.pVer = [uVector()]*nv
         self.pTemp = [uVector()]*nv
-        self.pPoly = [uPolygon()]*np
+        self.pPoly = [uPolygon(color=self.color)]*np
 
     def Close(self):
         if self.pVer:
@@ -79,18 +81,18 @@ class Obj:
         self.pVer[6] = uVector(a, c, b)
         self.pVer[7] = uVector(0, c, b)
 
-        self.pPoly[0] = uPolygon(0, 1, 2)
-        self.pPoly[1] = uPolygon(0, 2, 3)
-        self.pPoly[2] = uPolygon(6, 2, 1)
-        self.pPoly[3] = uPolygon(6, 1, 5)
-        self.pPoly[4] = uPolygon(4, 0, 3)
-        self.pPoly[5] = uPolygon(4, 3, 7)
-        self.pPoly[6] = uPolygon(7, 3, 2)
-        self.pPoly[7] = uPolygon(7, 2, 6)
-        self.pPoly[8] = uPolygon(5, 1, 0)
-        self.pPoly[9] = uPolygon(5, 0, 4)
-        self.pPoly[10] = uPolygon(4, 7, 6)
-        self.pPoly[11] = uPolygon(4, 6, 5)
+        self.pPoly[0] = uPolygon(0, 1, 2, color=self.color)
+        self.pPoly[1] = uPolygon(0, 2, 3, color=self.color)
+        self.pPoly[2] = uPolygon(6, 2, 1, color=self.color)
+        self.pPoly[3] = uPolygon(6, 1, 5, color=self.color)
+        self.pPoly[4] = uPolygon(4, 0, 3, color=self.color)
+        self.pPoly[5] = uPolygon(4, 3, 7, color=self.color)
+        self.pPoly[6] = uPolygon(7, 3, 2, color=self.color)
+        self.pPoly[7] = uPolygon(7, 2, 6, color=self.color)
+        self.pPoly[8] = uPolygon(5, 1, 0, color=self.color)
+        self.pPoly[9] = uPolygon(5, 0, 4, color=self.color)
+        self.pPoly[10] = uPolygon(4, 7, 6, color=self.color)
+        self.pPoly[11] = uPolygon(4, 6, 5, color=self.color)
 
     def MakeCyl(self, r, h ,n):
         self.Alloc(2*n+2, 2*n*2)

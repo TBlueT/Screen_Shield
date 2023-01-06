@@ -9,18 +9,18 @@ from UiUpdateprocess import *
 import random
 
 class PaintLabel(QLabel):
-    def __init__(self, parent:object = None, box_size:int=20, x_offset:int=0, y_offset:int=0):
+    def __init__(self, parent:object = None, box_size:int=20, x_offset:int=0, y_offset:int=0, color:bool=False):
         super().__init__(parent)
         self.scene = QGraphicsScene()
         self.MainW = parent
         self.uiUpdate = UiUpdate(self)
 
-
+        self.color: bool = color
         self.BoxSize = box_size
         self.offset = 20
         self.x_offset = x_offset
         self.y_offset = y_offset
-        self.box = Obj(self)
+        self.box = Obj(self, color=self.color)
         self.box.MakeBox(self.BoxSize,self.BoxSize,self.BoxSize)
         h = hMat()
 
