@@ -119,6 +119,8 @@ class moveMus(QThread):
         self.RssiTime = 0.5
         self.RssiTime_time = time.time()
 
+        self.RssiTrigger: bool = False
+
 
         self.ScreenSaveTime = 60
         self.ScreenSaveTime_time = time.time()
@@ -162,12 +164,16 @@ class moveMus(QThread):
                 self.ScreenSaveTime_time = temp_time
 
             if temp_time - self.RssiTime_time > self.RssiTime:
-                print(self.udpRssi.Rssi)
+                print(abs(self.udpRssi.Rssi))
                 if abs(self.udpRssi.Rssi) > 70:
                     self.Set_WinShield.emit()
+                    self.RssiTrigger = True
                     self.ScreenShield = True
                 elif abs(self.udpRssi.Rssi) < 50:
-                    self.ScreenSaveRelease()
+                    if self.RssiTrigger == True:
+                        self.ScreenSaveRelease()
+                        print("해재")
+                        self.RssiTrigger = False
 
                 self.RssiTime_time = self.RssiTime
 
