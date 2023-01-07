@@ -31,7 +31,5 @@ while True:
 	returnedList = blescan.parse_events(sock, 5)
 	print "----------"
 	for beacon in returnedList:
-		if beacon[:17] == '60:7c:c0:98:bd:e1' or beacon[:17] == '68:10:69:e1:16:12' or beacon[:17] == '46:bd:e7:50:e7:e1':
-			print beacon
-			send_sock.sendto(beacon, dest)
-
+		print beacon
+		send_sock.sendto(beacon, dest)
