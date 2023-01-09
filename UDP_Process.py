@@ -23,7 +23,8 @@ class UDPPro(QtCore.QThread):
             temp_data = data.decode().split(',')
             temp_addr = temp_data[1]
             temp_rssi = int(temp_data[len(temp_data)-1])
-            if temp_addr.find('180a') > 0:
+
+            if temp_addr.find('020a180a') > 0:
                 print(data)
                 self.Rssi = temp_rssi
             #print(temp_addr, temp_rssi)
