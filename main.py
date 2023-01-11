@@ -122,7 +122,7 @@ class moveMus(QThread):
         self.RssiTrigger: bool = False
 
 
-        self.ScreenSaveTime = 60
+        self.ScreenSaveTime = 240
         self.ScreenSaveTime_time = time.time()
         self.ScreenShield = False
 
