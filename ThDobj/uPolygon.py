@@ -31,9 +31,12 @@ class uPolygon:
         path.lineTo(x - pVer[self.s].x, y - pVer[self.s].y)
         path.lineTo(x - pVer[self.t].x, y - pVer[self.t].y)
         path.lineTo(x - pVer[self.f].x, y - pVer[self.f].y)
-        qp.setPen(QPen(Qt.GlobalColor.blue, 3.5))
+
         if self.color:
-            qp.setBrush(QBrush(QColor(self.c)))
+            qp.setPen(QPen(Qt.GlobalColor.blue, 3.5))
+            #qp.setBrush(QBrush(QColor(self.c)))
+        else:
+            qp.setPen(QPen(Qt.GlobalColor.blue, 2))
         qp.drawPath(path)
 
     def Click(self, pTemp, pt):

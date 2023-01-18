@@ -37,6 +37,7 @@ class Obj:
         self.pTemp = [uVector()]*nv
         self.pPoly = [uPolygon(color=self.color)]*np
 
+
     def Close(self):
         if self.pVer:
             self.pVer = None
@@ -125,6 +126,39 @@ class Obj:
             j += 1
             self.pPoly[j] = uPolygon((n*2)+1, i+n, next+n)
             j += 1
+
+    def MakeCircle(self, r: float, n:int):
+        self.Alloc(n * n*2, n * n*2)
+
+        x, y, z = [0.0,0.0,0.0]
+        dq = 180 / (float(n))
+        dr = 360 / (float(n))
+
+        i, p = [0,0]
+
+        for o in range(0, n+1):
+            old_z = r * np.cos(np.radians(o * dq))
+            for i in range(0, n):
+                x = r * np.sin(np.radians(o * dq)) * np.cos(np.radians(i * dr))
+                y = r * np.sin(np.radians(o * dq)) * np.sin(np.radians(i * dr))
+                z = r * np.cos(np.radians(o * dq))
+                self.pVer[p] = uVector(x, y, old_z)
+                self.pVer[p + n] = uVector(x, y, z)
+                p += 1
+            old_z = z
+        j = 0
+        p = 0
+
+        for o in range(0,n):
+            for i in range(0,n):
+                next = p + 1
+                if (next >= n + (o * n)):
+                    next = 0 + (n * o)
+                self.pPoly[j] = uPolygon(p, next, next + n, color=self.color)
+                j += 1
+                self.pPoly[j] = uPolygon(p, next + n, p + n, color=self.color)
+                j += 1
+                p += 1
 
     def MakeBlock(self, color=None):
         V = self.main.V

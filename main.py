@@ -25,7 +25,7 @@ class mainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         self.view = PaintLabel(self)
-        self.view.resize(40,40)
+        self.view.resize(45,45)
         layout.addWidget(self.view)
 
         self.setLayout(layout)
@@ -42,7 +42,7 @@ class mainWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
         self.setAttribute(Qt.WidgetAttribute.WA_Disabled, True)
-        self.resize(40, 40)
+        self.resize(45, 45)
         self.M = False
 
         self.WinShieldName = []
@@ -50,7 +50,6 @@ class mainWindow(QMainWindow):
     @pyqtSlot(int, int, int)
     def Set_MovePoint(self, x, y, d):
         self.move(x, y)
-
     @pyqtSlot()
     def Set_WinShield(self):
         if not self.M:
@@ -90,7 +89,7 @@ class Shield(QDialog):
 
         layout = QVBoxLayout()
 
-        self.view = PaintLabel(self, h/4, w/2, h/2, color=True)
+        self.view = PaintLabel(self, h/15, w/2, h/2, Plo=random.randrange(3, 20), color=True)
         layout.addWidget(self.view)
 
         self.setLayout(layout)
