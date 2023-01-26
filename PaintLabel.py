@@ -9,7 +9,7 @@ from UiUpdateprocess import *
 import random
 
 class PaintLabel(QLabel):
-    def __init__(self, parent:object = None, box_size:int=20, x_offset:int=20, y_offset:int=20, Plo:int = 5, color:bool=False):
+    def __init__(self, parent:object = None, box_size:int=20, x_offset:int=20, y_offset:int=20, Plo:int = 6, color:bool=False):
         super().__init__(parent)
         self.scene = QGraphicsScene()
         self.MainW = parent
