@@ -9,7 +9,7 @@ from UiUpdateprocess import *
 import random
 
 class PaintLabel(QLabel):
-    def __init__(self, parent:object = None, box_size:int=20, x_offset:int=20, y_offset:int=20, Plo:int = 6, color:bool=False):
+    def __init__(self, parent:object = None, box_size:int=24, x_offset:int=20, y_offset:int=20, Plo:int = 6, color:bool=False):
         super().__init__(parent)
         self.scene = QGraphicsScene()
         self.MainW = parent
@@ -17,17 +17,17 @@ class PaintLabel(QLabel):
 
         self.color: bool = color
         self.BoxSize = box_size
-        self.offset = (box_size/np.pi)/20
+        self.offset = box_size/2#(box_size/np.pi)/20
         self.x_offset = x_offset
         self.y_offset = y_offset
         self.box = Obj(self, color=self.color)
-        #self.box.MakeBox(self.BoxSize,self.BoxSize,self.BoxSize)
-        self.box.MakeCircle(self.BoxSize, Plo)
+        self.box.MakeBox(self.BoxSize,self.BoxSize,self.BoxSize)
+        #self.box.MakeCircle(self.BoxSize, Plo)
         #self.box.MakeCyl(self.BoxSize,50, 3)
         h = hMat()
 
-        #self.box.H = h.Trans(uVector(-self.offset - self.x_offset, -self.offset - self.y_offset, -self.offset))
-        self.box.H = h.Trans(uVector(-self.offset - self.x_offset, -self.offset - self.y_offset, -self.offset)) # * h.RotZ(-45) * h.RotX(-125)
+        self.box.H = h.Trans(uVector(-self.offset - self.x_offset, -self.offset - self.y_offset, -self.offset))
+        #self.box.H = h.Trans(uVector(-self.offset - self.x_offset, -self.offset - self.y_offset, -self.offset)) # * h.RotZ(-45) * h.RotX(-125)
 
         self.ran = 0
         self.ran2 = 0
@@ -54,9 +54,12 @@ class PaintLabel(QLabel):
         a = 1 * (self.ran * 0.1)
         b = 1 * (self.ran2 * 0.1)
         c = 1 * (self.ran3 * 0.1)
-        self.box.H = self.box.H * h.Trans(uVector(self.offset/2, self.offset/2, self.offset/2))
+        # self.box.H = self.box.H * h.Trans(uVector(self.offset/2, self.offset/2, self.offset/2))
+        # self.box.H = self.box.H * h.RotX(a) * h.RotY(b) * h.RotZ(c)
+        # self.box.H = self.box.H * h.Trans(uVector(-self.offset/2, -self.offset/2, -self.offset/2))
+        self.box.H = self.box.H * h.Trans(uVector(self.offset, self.offset, self.offset))
         self.box.H = self.box.H * h.RotX(a) * h.RotY(b) * h.RotZ(c)
-        self.box.H = self.box.H * h.Trans(uVector(-self.offset/2, -self.offset/2, -self.offset/2))
+        self.box.H = self.box.H * h.Trans(uVector(-self.offset, -self.offset, -self.offset))
 
         self.box.Update()
         self.box.Draw(qp)

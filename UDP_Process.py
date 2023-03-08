@@ -2,7 +2,7 @@
 
 from PyQt6 import QtCore, QtGui, QtTest
 
-import socket, time, datetime
+import socket, time, datetime, math
 #from Packets import *
 
 class UDPPro(QtCore.QThread):
@@ -13,8 +13,12 @@ class UDPPro(QtCore.QThread):
 
         self.Rssi:int = 0
 
-        self.rssi_L:int = 11
-        self.rssi_list: list = [0 for _ in range(self.rssi_L)]
+        self.fc: int = 20
+        self.dt: float = 1/1000.0
+        self.lambde: float = 2*math.pi*self.fc*self.dt
+        self.x: float = 0.0
+        self.x_f: float = 0.0
+        self.x_fold: float = 0.0
 
 
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -28,13 +32,10 @@ class UDPPro(QtCore.QThread):
             temp_rssi = int(temp_data[len(temp_data)-1])
 
             if temp_addr.find('020a180a') > 0:
-                self.rssi_list[self.rssi_L-1] = temp_rssi
-                for i in range(self.rssi_L-1):
-                    self.rssi_list[i] = self.rssi_list[i+1]
-                    self.Rssi += self.rssi_list[i]
-                temp = self.Rssi/(self.rssi_L-1)
+                temp = self.lambde/(1+self.lambde)*temp_rssi+1/(1+self.lambde)*self.x_fold
+                self.x_fold = temp
                 self.Rssi = temp
-
+            time.sleep(0.1)
                 #print(temp_rssi)
                 #self.Rssi = temp_rssi
             #print(temp_addr, temp_rssi)

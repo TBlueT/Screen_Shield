@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QDialog, QSp
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, pyqtSlot
 from PyQt6 import uic
 
-from win32api import GetCursorPos, keybd_event, GetKeyState, EnumDisplayMonitors
+from win32api import GetCursorPos, keybd_event, GetKeyState, EnumDisplayMonitors, mouse_event
 import win32con
 import keyboard
 from PaintLabel import *
@@ -53,27 +53,31 @@ class mainWindow(QMainWindow):
     @pyqtSlot()
     def Set_WinShield(self):
         if not self.M:
+            o = 1
             for i in self.monitors:
                 x = i[2] - i[0]
                 y = i[3] - i[1]
                 print("asd",i[0], i[1], x,y)
-                setattr(self, F"Shield_{i}",Shield(i[0], i[1], x, y))
+                setattr(self, F"Shield_{i}",Shield(i[0], i[1], x, y, F"img/{o}.jpg"))
                 self.WinShieldName.append(F"Shield_{i}")
                 print(self.WinShieldName)
+                mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
+                mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
+                o += 1
             self.M = True
 
     @pyqtSlot()
     def Set_WinShield_Close(self):
         for i in self.WinShieldName:
             getattr(self, i).close()
-            getattr(self, i).view.uiUpdate.run_stop = False
+            #getattr(self, i).view.uiUpdate.run_stop = False
             delattr(self, i)
         self.WinShieldName = []
         self.M = False
 
 
 class Shield(QDialog):
-    def __init__(self, x, y, w, h):
+    def __init__(self, x, y, w, h, img):
         super(Shield, self).__init__()
         print(x,y,w,h)
         self.move(x,y)
@@ -83,16 +87,18 @@ class Shield(QDialog):
         self.showFullScreen()
 
 
-        # self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
-        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
-        # self.setAttribute(Qt.WidgetAttribute.WA_Disabled, False)
+        #self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+        #self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
+        self.setAttribute(Qt.WidgetAttribute.WA_Disabled, False)
 
-        layout = QVBoxLayout()
 
-        self.view = PaintLabel(self, h/15, w/2, h/2, Plo=random.randrange(3, 20), color=True)
-        layout.addWidget(self.view)
+        self.setStyleSheet(F"border-image: url({img});")
+        #layout = QVBoxLayout()
 
-        self.setLayout(layout)
+        #self.view = PaintLabel(self, h/10, w/2, h/2, Plo=random.randrange(3, 20), color=True)
+        #layout.addWidget(self.view)
+
+        #self.setLayout(layout)
 
     def outO(self):
         del self.view
@@ -142,40 +148,42 @@ class moveMus(QThread):
             except:
                 x = self.x_old
                 y = self.y_old
-            temp_time = time.time()
-            if temp_time - self.Delay_time > self.Delay:
-                if x != self.x_old or y != self.y_old:
-                    self.WinMove(x, y)
+            try:
+                temp_time = time.time()
+                if temp_time - self.Delay_time > self.Delay:
+                    if (x != self.x_old or y != self.y_old) and self.RssiTrigger == False:
+                        self.WinMove(x, y)
 
-                    self.ScreenSaveRelease()
+                        self.ScreenSaveRelease()
+                        self.ScreenSaveTime_time = temp_time
+
+                    if self.ScreenShield:
+                        self.Set_WinShield.emit()
+                        print("Win show")
+
+                    print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
+                    self.Delay_time = temp_time
+
+                if temp_time - self.ScreenSaveTime_time > self.ScreenSaveTime:
+                    self.ScreenShield = True
+                    self.PressKey()
                     self.ScreenSaveTime_time = temp_time
 
-                if self.ScreenShield:
-                    self.Set_WinShield.emit()
-                    print("Win show")
+                if temp_time - self.RssiTime_time > self.RssiTime:
+                    print(abs(self.udpRssi.Rssi))
+                    if abs(self.udpRssi.Rssi) > 80:
+                        #self.Set_WinShield.emit()
+                        self.RssiTrigger = True
+                        self.ScreenShield = True
+                    elif abs(self.udpRssi.Rssi) < 55:
+                        if self.RssiTrigger == True:
+                            self.ScreenSaveRelease()
+                            print("해재")
+                            self.RssiTrigger = False
 
-                print(F"Screen {int(temp_time - self.ScreenSaveTime_time)}")
-                self.Delay_time = temp_time
-
-            if temp_time - self.ScreenSaveTime_time > self.ScreenSaveTime:
-                self.ScreenShield = True
-                self.PressKey()
-                self.ScreenSaveTime_time = temp_time
-
-            if temp_time - self.RssiTime_time > self.RssiTime:
-                print(abs(self.udpRssi.Rssi))
-                if abs(self.udpRssi.Rssi) > 80:
-                    self.Set_WinShield.emit()
-                    self.RssiTrigger = True
-                    self.ScreenShield = True
-                elif abs(self.udpRssi.Rssi) < 55:
-                    if self.RssiTrigger == True:
-                        self.ScreenSaveRelease()
-                        print("해재")
-                        self.RssiTrigger = False
-
-                self.RssiTime_time = self.RssiTime
-
+                    self.RssiTime_time = self.RssiTime
+            except:
+                pass
             time.sleep(0.009)
 
     def ScreenSaveTime_Trigger(self):
@@ -196,7 +204,7 @@ class moveMus(QThread):
 
     @pyqtSlot(str)
     def Getkey(self, name):
-        if 'f19' != name:
+        if ('f19' != name) and self.RssiTrigger == False:
             self.ScreenSaveRelease()
             print(name)
             self.ScreenSaveTime_time = time.time()
@@ -237,3 +245,5 @@ if __name__ == '__main__':
     MainWindow.show()
 
     app.exec()
+
+
